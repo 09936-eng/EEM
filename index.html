@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ELEMENT MATCH : ภารกิจพิชิตตารางธาตุ</title>
+
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="description" content="เกมจับคู่ตารางธาตุสำหรับนักเรียนมัธยมศึกษาตอนปลาย">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <style>
+    :root {
+      --bg-color: #0d1117;
+      --card-bg: rgba(22, 27, 34, 0.75);
+      --card-border: rgba(0, 242, 254, 0.2);
+      --primary: #00f2fe;
+      --secondary: #4facfe;
+      --accent: #ff007f;
+      --text: #f0f6fc;
+      --text-dim: #8b949e;
+      --success: #00e676;
+      --warning: #ff3d00;
+      --gold: #ffd700;
+      --font-main: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg-color);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .bg-glow {
+      position: fixed;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(0,242,254,0.15) 0%, rgba(0,0,0,0) 70%);
+      top: -50px;
+      left: -50px;
+      border-radius: 50%;
+      z-index: 0;
+      pointer-events: none;
+      animation: floatGlow 10s infinite alternate ease-in-out;
+    }
+    .bg-glow-2 {
+      position: fixed;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255,0,127,0.1) 0%, rgba(0,0,0,0) 70%);
+      bottom: -100px;
+      right: -100px;
+      border-radius: 50%;
+      z-index: 0;
+      pointer-events: none;
+      animation: floatGlow 14s infinite alternate-reverse ease-in-out;
+    }
+
+    @keyframes floatGlow {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(50px, 50px) scale(1.2); }
+    }
+
+    .screen {
+      width: 100%;
+      max-width: 900px;
+      padding: 20px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+      animation: fadeIn 0.4s cubic-bezier(0.39, 0.575, 0.565, 1) forwards;
+    }
+    .screen.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .glass-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 25px;
+      width: 100%;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+      text-align: center;
+      position: relative;
+    }
+
+    .title-logo { font-size: 3rem; margin-bottom: 5px; }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 1.5px;
+      margin-bottom: 5px;
+    }
+    .subtitle { color: var(--text-dim); font-size: 1.1rem; margin-bottom: 25px; }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .btn {
+      background: linear-gradient(135deg, rgba(0, 242, 254, 0.1), rgba(79, 172, 254, 0.2));
+      border: 1px solid var(--primary);
+      color: var(--text);
+      padding: 14px 20px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .btn:hover {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #000;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
+      transform: translateY(-2px);
+    }
+    .btn-accent {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(255, 0, 127, 0.1), rgba(255, 0, 127, 0.2));
+    }
+    .btn-accent:hover { background: var(--accent); color: #fff; }
+
+    .top-controls {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      left: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    .icon-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .form-group { margin-bottom: 15px; text-align: left; }
+    .form-group label { display: block; margin-bottom: 6px; color: var(--primary); }
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .difficulty-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .diff-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--card-border);
+      padding: 12px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .diff-card.selected {
+      border-color: var(--primary);
+      background: rgba(0, 242, 254, 0.15);
+    }
+
+    .game-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 15px;
+      margin-bottom: 15px;
+    }
+    .stat-box { display: flex; flex-direction: column; align-items: center; }
+    .stat-label { font-size: 0.75rem; color: var(--text-dim); }
+    .stat-value { font-size: 1.2rem; font-weight: bold; color: var(--primary); }
+
+    .card-grid {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .card {
+      aspect-ratio: 3/4;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.5s;
+      cursor: pointer;
+      border-radius: 12px;
+    }
+    .card.flipped, .card.matched { transform: rotateY(180deg); }
+    .card.matched { opacity: 0.75; }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border: 1px solid var(--card-border);
+    }
+    .card-front { background: linear-gradient(135deg, #161b22, #0d1117); color: var(--primary); font-size: 1.8rem; }
+    .card-back { background: linear-gradient(135deg, #1f2937, #111827); transform: rotateY(180deg); }
+    .card-back .main-text { font-size: 0.95rem; font-weight: 700; }
+    .card-back .sub-text { font-size: 0.75rem; color: var(--text-dim); }
+
+    .table-container { width: 100%; max-height: 280px; overflow-y: auto; margin: 15px 0; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--card-bg);
+      border: 1px solid var(--primary);
+      padding: 10px 20px;
+      border-radius: 20px;
+      transition: transform 0.3s;
+      pointer-events: none;
+      z-index: 100;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+  <div class="bg-glow-2"></div>
+
+  <div class="top-controls">
+    <button id="pwa-install-btn" class="icon-btn" style="display:none;">📲 ติดตั้งแอป</button>
+    <button id="sound-btn" class="icon-btn" style="margin-left: auto;">🔊 เสียง ON</button>
+  </div>
+
+  <section id="screen-welcome" class="screen active">
+    <div class="glass-panel">
+      <div class="title-logo">🧪⚛️🔬</div>
+      <h1>ELEMENT MATCH</h1>
+      <p class="subtitle">ภารกิจพิชิตตารางธาตุ</p>
+      <div class="btn-group">
+        <button class="btn" onclick="app.showScreen('screen-player')">🚀 เริ่มเกม</button>
+        <button class="btn" onclick="app.showScreen('screen-how-to')">📖 วิธีเล่น</button>
+        <button class="btn" onclick="app.showLeaderboard()">🏆 ตารางคะแนน</button>
+        <button class="btn" onclick="app.showScreen('screen-about')">ℹ️ เกี่ยวกับเกม</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-player" class="screen">
+    <div class="glass-panel">
+      <h2>📝 ข้อมูลนักเรียน & ระดับ</h2>
+      <p class="subtitle">กรอกข้อมูลเพื่อลงทะเบียนรับคะแนน</p>
+      <form id="player-form" onsubmit="event.preventDefault(); app.startGame();">
+        <div class="form-group">
+          <label for="p-name">ชื่อ-นามสกุล *</label>
+          <input type="text" id="p-name" class="form-control" required>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <div class="form-group" style="flex:2;">
+            <label for="p-class">ชั้น *</label>
+            <input type="text" id="p-class" class="form-control" placeholder="ม.4/1" required>
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="p-no">เลขที่ *</label>
+            <input type="number" id="p-no" class="form-control" placeholder="1" min="1" required>
+          </div>
+        </div>
+        <div class="difficulty-selector">
+          <div class="diff-card selected" onclick="app.selectDiff('EASY', this)">
+            <h4>EASY</h4>
+            <p>เวลา 90s</p>
+          </div>
+          <div class="diff-card" onclick="app.selectDiff('NORMAL', this)">
+            <h4>NORMAL</h4>
+            <p>เวลา 60s</p>
+          </div>
+          <div class="diff-card" onclick="app.selectDiff('HARD', this)">
+            <h4>HARD</h4>
+            <p>เวลา 45s</p>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-accent">🎮 เริ่มภารกิจ</button>
+          <button type="button" class="btn" onclick="app.showScreen('screen-welcome')">🔙 ย้อนกลับ</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="screen-game" class="screen">
+    <div class="game-header">
+      <div class="stat-box"><span class="stat-label">คะแนน</span><span id="score-val" class="stat-value">0</span></div>
+      <div class="stat-box"><span class="stat-label">TIME</span><span id="timer-val" class="stat-value">00:60</span></div>
+      <div class="stat-box"><span class="stat-label">COMBO</span><span id="combo-val" class="stat-value">x0</span></div>
+      <div class="stat-box"><span class="stat-label">ชีวิต</span><span id="lives-val" class="stat-value">❤️❤️❤️</span></div>
+    </div>
+    <div id="card-grid" class="card-grid"></div>
+  </section>
+
+  <section id="screen-summary" class="screen">
+    <div class="glass-panel">
+      <h2 id="summary-title">MISSION COMPLETE!</h2>
+      <div id="summary-details" style="text-align: left; margin: 15px 0;"></div>
+      <div class="btn-group">
+        <button class="btn btn-accent" onclick="app.startGame()">🔄 เล่นอีกครั้ง</button>
+        <button class="btn" onclick="app.showLeaderboard()">🏆 ดูตารางคะแนน</button>
+        <button class="btn" onclick="app.showScreen('screen-welcome')">🏠 กลับหน้าหลัก</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="screen-leaderboard" class="screen">
+    <div class="glass-panel">
+      <h2>🏆 ตารางคะแนนสูงสุด (Top 10)</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>อันดับ</th><th>ชื่อ</th><th>ชั้น</th><th>ระดับ</th><th>คะแนน</th></tr>
+          </thead>
+          <tbody id="leaderboard-body"></tbody>
+        </table>
+      </div>
+      <button class="btn" onclick="app.showScreen('screen-welcome')">🔙 กลับหน้าหลัก</button>
+    </div>
+  </section>
+
+  <section id="screen-how-to" class="screen">
+    <div class="glass-panel" style="text-align: left;">
+      <h2>📖 วิธีการเล่น</h2>
+      <ul style="padding-left: 20px; margin-top: 10px;">
+        <li>เปิดการ์ด 2 ใบเพื่อจับคู่ธาตุ</li>
+        <li>จับคู่ถูก: +100 คะแนน | จับคู่ผิด: -20 คะแนนและเสียหัวใจ</li>
+      </ul>
+      <br>
+      <button class="btn" onclick="app.showScreen('screen-welcome')">เข้าใจแล้ว</button>
+    </div>
+  </section>
+
+  <section id="screen-about" class="screen">
+    <div class="glass-panel">
+      <h2>ℹ️ เกี่ยวกับเกม</h2>
+      <p style="margin: 15px 0; color: var(--text-dim);">ELEMENT MATCH : สื่อการเรียนรู้วิทยาศาสตร์ PWA</p>
+      <button class="btn" onclick="app.showScreen('screen-welcome')">🔙 ย้อนกลับ</button>
+    </div>
+  </section>
+
+  <div id="toast" class="toast">แจ้งเตือน</div>
+
+  <script>
+    const ELEMENTS_DB = [
+      { symbol: "H", nameEn: "Hydrogen", nameTh: "ไฮโดรเจน", atomic: 1 },
+      { symbol: "He", nameEn: "Helium", nameTh: "ฮีเลียม", atomic: 2 },
+      { symbol: "Li", nameEn: "Lithium", nameTh: "ลิเทียม", atomic: 3 },
+      { symbol: "C", nameEn: "Carbon", nameTh: "คาร์บอน", atomic: 6 },
+      { symbol: "N", nameEn: "Nitrogen", nameTh: "ไนโตรเจน", atomic: 7 },
+      { symbol: "O", nameEn: "Oxygen", nameTh: "ออกซิเจน", atomic: 8 },
+      { symbol: "Na", nameEn: "Sodium", nameTh: "โซเดียม", atomic: 11 },
+      { symbol: "Ca", nameEn: "Calcium", nameTh: "แคลเซียม", atomic: 20 },
+      { symbol: "Fe", nameEn: "Iron", nameTh: "เหล็ก", atomic: 26 },
+      { symbol: "Au", nameEn: "Gold", nameTh: "ทองคำ", atomic: 79 }
+    ];
+
+    class SoundSystem {
+      constructor() {
+        this.ctx = null;
+        this.enabled = localStorage.getItem('sound_pref') !== 'off';
+        this.updateBtnUI();
+      }
+      init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      toggle() {
+        this.enabled = !this.enabled;
+        localStorage.setItem('sound_pref', this.enabled ? 'on' : 'off');
+        this.updateBtnUI();
+      }
+      updateBtnUI() {
+        const btn = document.getElementById('sound-btn');
+        if (btn) btn.innerHTML = this.enabled ? '🔊 เสียง ON' : '🔇 เสียง OFF';
+      }
+      playTone(freq, duration) {
+        if (!this.enabled) return;
+        this.init();
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + duration);
+        } catch(e){}
+      }
+      playFlip() { this.playTone(400, 0.1); }
+      playCorrect() { this.playTone(600, 0.2); }
+      playWrong() { this.playTone(200, 0.2); }
+    }
+
+    class GameEngine {
+      constructor() {
+        this.sound = new SoundSystem();
+        this.selectedDiff = 'EASY';
+        this.cards = [];
+        this.flippedCards = [];
+        this.isLockBoard = false;
+        this.score = 0;
+        this.combo = 0;
+        this.matchedPairs = 0;
+        this.totalPairs = 0;
+        this.lives = 3;
+        this.timer = null;
+        this.timeLeft = 0;
+        this.player = { name: '', class: '', no: '' };
+        this.deferredPrompt = null;
+        this.initPWA();
+      }
+
+      showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+      }
+
+      selectDiff(diff, el) {
+        this.selectedDiff = diff;
+        document.querySelectorAll('.diff-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+      }
+
+      showToast(msg) {
+        const t = document.getElementById('toast');
+        t.innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+      }
+
+      shuffle(arr) { return arr.sort(() => Math.random() - 0.5); }
+
+      startGame() {
+        const name = document.getElementById('p-name').value.trim();
+        const pClass = document.getElementById('p-class').value.trim();
+        const pNo = document.getElementById('p-no').value.trim();
+
+        if (!name || !pClass || !pNo) {
+          this.showToast("⚠️ กรุณากรอกข้อมูลให้ครบ");
+          return;
+        }
+
+        this.player = { name, class: pClass, no: pNo };
+        let pairCount = this.selectedDiff === 'HARD' ? 8 : (this.selectedDiff === 'NORMAL' ? 6 : 4);
+        let time = this.selectedDiff === 'HARD' ? 45 : (this.selectedDiff === 'NORMAL' ? 60 : 90);
+
+        this.totalPairs = pairCount;
+        this.score = 0;
+        this.combo = 0;
+        this.matchedPairs = 0;
+        this.lives = this.selectedDiff === 'EASY' ? 5 : 3;
+        this.timeLeft = time;
+
+        this.updateStatsUI();
+        this.generateCards(pairCount);
+        this.startTimer();
+        this.showScreen('screen-game');
+      }
+
+      generateCards(pairCount) {
+        const grid = document.getElementById('card-grid');
+        grid.innerHTML = '';
+        grid.style.gridTemplateColumns = `repeat(4, 1fr)`;
+
+        const selected = this.shuffle([...ELEMENTS_DB]).slice(0, pairCount);
+        let deck = [];
+
+        selected.forEach((elem, idx) => {
+          deck.push(
+            { main: elem.symbol, sub: `เลขอะตอม ${elem.atomic}`, pairId: idx },
+            { main: elem.nameTh, sub: elem.nameEn, pairId: idx }
+          );
+        });
+
+        deck = this.shuffle(deck);
+        deck.forEach((cardData) => {
+          const card = document.createElement('div');
+          card.className = 'card';
+          card.dataset.pairId = cardData.pairId;
+          card.innerHTML = `
+            <div class="card-face card-front">?</div>
+            <div class="card-face card-back">
+              <div class="main-text">${cardData.main}</div>
+              <div class="sub-text">${cardData.sub}</div>
+            </div>
+          `;
+          card.addEventListener('click', () => this.flipCard(card));
+          grid.appendChild(card);
+        });
+      }
+
+      flipCard(card) {
+        if (this.isLockBoard || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+        this.sound.playFlip();
+        card.classList.add('flipped');
+        this.flippedCards.push(card);
+
+        if (this.flippedCards.length === 2) this.checkMatch();
+      }
+
+      checkMatch() {
+        this.isLockBoard = true;
+        const [c1, c2] = this.flippedCards;
+        const isMatch = c1.dataset.pairId === c2.dataset.pairId;
+
+        if (isMatch) {
+          this.sound.playCorrect();
+          c1.classList.add('matched');
+          c2.classList.add('matched');
+          this.score += 100;
+          this.matchedPairs++;
+          this.flippedCards = [];
+          this.isLockBoard = false;
+          if (this.matchedPairs === this.totalPairs) this.endGame(true);
+        } else {
+          this.sound.playWrong();
+          this.lives--;
+          setTimeout(() => {
+            c1.classList.remove('flipped');
+            c2.classList.remove('flipped');
+            this.flippedCards = [];
+            this.isLockBoard = false;
+            if (this.lives <= 0) this.endGame(false, "หัวใจหมดแล้ว!");
+          }, 800);
+        }
+        this.updateStatsUI();
+      }
+
+      updateStatsUI() {
+        document.getElementById('score-val').innerText = this.score;
+        document.getElementById('lives-val').innerText = '❤️'.repeat(Math.max(0, this.lives));
+        document.getElementById('timer-val').innerText = `${this.timeLeft}s`;
+      }
+
+      startTimer() {
+        clearInterval(this.timer);
+        this.timer = setInterval(() => {
+          this.timeLeft--;
+          this.updateStatsUI();
+          if (this.timeLeft <= 0) {
+            clearInterval(this.timer);
+            this.endGame(false, "หมดเวลา!");
+          }
+        }, 1000);
+      }
+
+      endGame(isWin, reason = "") {
+        clearInterval(this.timer);
+        this.saveScore();
+        document.getElementById('summary-title').innerText = isWin ? "🎉 MISSION COMPLETE!" : "💥 GAME OVER!";
+        document.getElementById('summary-details').innerHTML = `คะแนนของคุณ: <b>${this.score}</b><br>${reason}`;
+        this.showScreen('screen-summary');
+      }
+
+      saveScore() {
+        const records = JSON.parse(localStorage.getItem('elem_leaderboard') || '[]');
+        records.push({ name: this.player.name, class: this.player.class, diff: this.selectedDiff, score: this.score });
+        records.sort((a, b) => b.score - a.score);
+        localStorage.setItem('elem_leaderboard', JSON.stringify(records.slice(0, 10)));
+      }
+
+      showLeaderboard() {
+        const tbody = document.getElementById('leaderboard-body');
+        tbody.innerHTML = '';
+        const records = JSON.parse(localStorage.getItem('elem_leaderboard') || '[]');
+        records.forEach((r, idx) => {
+          tbody.innerHTML += `<tr><td>${idx + 1}</td><td>${r.name}</td><td>ม.${r.class}</td><td>${r.diff}</td><td>${r.score}</td></tr>`;
+        });
+        this.showScreen('screen-leaderboard');
+      }
+
+      initPWA() {
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js').catch(() => {});
+          });
+        }
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          this.deferredPrompt = e;
+          const btn = document.getElementById('pwa-install-btn');
+          btn.style.display = 'flex';
+          btn.onclick = () => {
+            btn.style.display = 'none';
+            this.deferredPrompt.prompt();
+          };
+        });
+      }
+    }
+
+    const app = new GameEngine();
+  </script>
+</body>
+</html>
